@@ -1,23 +1,15 @@
 from fastapi import FastAPI, Body
-from tensorflow.keras.layers import TextVectorization
 import tensorflow as tf
 import numpy as np
-import json
+import pickle
 import pandas as pd
 
 # Lade das Modell
 model = tf.keras.models.load_model('toxicity.keras')
 
 # Laden des vectorizers
-with open('text_vectorizer_config.json', 'r') as f:
-    vectorizer_config = json.load(f)
-
-# Erstelle den TextVectorizer mit der geladenen Konfiguration
-vectorizer = TextVectorization.from_config(vectorizer_config)
-
-# Lade die Gewichtung des Vektorisierers (optional)
-weights = np.load('vectorizer_weights.npy', allow_pickle=True)
-vectorizer.set_weights(weights)
+with open('vectorizer.pkl', 'rb') as f:
+    vectorizer = pickle.load(f)
 
 df = pd.read_csv('train.csv')
 x = df['comment_text']
