@@ -2,30 +2,18 @@ from fastapi import FastAPI, Body
 import tensorflow as tf
 import numpy as np
 import pickle
-import pandas as pd
-
-# Lade das Modell
-model = tf.keras.models.load_model('toxicity.keras')
-
-# Laden des vectorizers
-with open('vectorizer.pkl', 'rb') as f:
-    vectorizer = pickle.load(f)
-
-df = pd.read_csv('train.csv')
-x = df['comment_text']
-vectorizer.adapt(x.values)
+import uvicorn
+from mangum import Mangum
 
 app = FastAPI()
+handler = Mangum(app)
 
+# Lade das Modell
+model = tf.keras.models.load_model('models/toxicity.keras')
 
-# @app.on_event("startup")
-# async def startup_event():
-#     # Hier könnte der Vektorisierer mit den gleichen Daten angepasst werden,
-#     # falls du neue Daten hast oder der Vektorisierer nicht wie erwartet funktioniert.
-#     # Angenommen, du hast immer noch die Daten `X` (Trainingsdaten):
-#     df = pd.read_csv('train.csv')
-#     x = df['comment_text']
-#     vectorizer.adapt(x.values)
+# Laden des vectorizers
+with open('models/vectorizer.pkl', 'rb') as f:
+    vectorizer = pickle.load(f)
 
 
 @app.post("/predict/")
@@ -41,3 +29,6 @@ async def predict(input_data: str = Body(...)):
             "insult": res.tolist()[0][4],
             "identity_hate": res.tolist()[0][5],
             }
+
+if __name__=="__main__":
+    uvicorn.run(app,host="0.0.0.0",port=9000)
